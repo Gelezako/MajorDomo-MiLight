@@ -1,40 +1,44 @@
-
-<!-- table zwave_devices search -->
-<div>
- [ <a href="#" onClick="$('#api_settings').toggle();return false;"><#LANG_SETUP#></a> ]
-</div>
-<div style="display:none" id='api_settings'>
+<div  id='api_settings'>
 &nbsp;
-<form action="?" method="post" enctype="multipart/form-data" name="frmEdit" class="form-horizontal">
+<form action="?" method="get" enctype="multipart/form-data" name="save_settings" class="form-horizontal">
 <fieldset>
-<div class="form-group">
- <label class="control-label"[#if ERR_API_URL#] style="color:red;font-weight:bold"[#endif#]>
- API URL:
- (*)
- </label>
- <div class="controls"><input type="text" name="api_url" value="[#API_URL#]" class="input"></div>
-</div>
 <div class="form-actions">
 <button type="submit" name="subm" value="Submit" class="btn btn-primary"><#LANG_UPDATE#></button>
 <input type="hidden" name="view_mode" value="update_settings">
-<input type="hidden" name="mode" value="update">
+<input type="hidden" name="mode" value="update"><br>
+
+<h3>Настройки для лампы MiLight</h3><br><br>
+
+<div class="form-group">
+	<label class="col-md-3">IP адрес<br>MILIGHT WiFI BOX*:</label>
+	<div class="col-md-3">
+	<input type="text" name="host" class="form-control" placeholder="192.168.1.100"></div><br><br><br>
+	
+	<label class="col-md-3">Время обновления:</label>
+	<div class="col-md-3">
+	<input type="text" name="updatedTime" class="form-control"></div><br><br><br>
+	
+	<label class="col-md-3">Уровень яркости:</label>
+	<div class="col-md-3">
+	<input type="text" name="level" class="form-control"></div><br><br><br>
+	
+	<label class="col-md-3">Тип лампы<br>(0-белая,1-цветная):</label>
+	<div class="col-md-3">
+	<input type="text" name="lamptype" class="form-control"></div><br><br><br>
+	
+	<label class="col-md-3">Режим работы<br>(C-Color,W-White):</label>
+	<div class="col-md-3">
+	<input type="text" name="mode" class="form-control" placeholder="C\W"></div><br><br><br>
+	
+	<label class="col-md-3">Зона (1-4):</label>
+	<div class="col-md-3">
+	<input type="text" name="zone" class="form-control" placeholder="1-4"></div><br><br><br>
+	
+    <button type="submit" name="subm" value="settings" class="btn btn-primary">Сохранить</button></div>
+	</div><br>
+	</fieldset>
+</form><br>
+* - обязательные поля<br>
+<br>
+<a href="http://majordomo.smartliving.ru/forum/" target="_blank">Обсуждение модуля на форуме</a>.<br>
 </div>
-</fieldset>
-</form>
-</div>
- <!-- action usual -->
- <!-- table MiLamp1 search -->
- [#if VIEW_MODE="search_MiLamp1" || VIEW_MODE=""#]
-  [#inc MiLamp1_search_admin.html#]
- [#endif VIEW_MODE#]
- <!-- / table MiLamp1 search -->
- <!-- table MiLamp1 edit -->
- [#if VIEW_MODE="edit_MiLamp1"#]
-   [#inc MiLamp1_edit.html#]
- [#endif VIEW_MODE#]
- <!-- / table MiLamp1 edit -->
- <!-- table MiLamp1 view --> 
- [#if VIEW_MODE="view_MiLamp1"#]
-   [#inc MiLamp1_view.html#]
- [#endif VIEW_MODE#]
- <!-- / table MiLamp1 view -->
