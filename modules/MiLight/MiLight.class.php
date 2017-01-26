@@ -130,8 +130,21 @@ function admin(&$out) {
  
   global $zone;
  if(isset($zone)) sg('MiLamp1.Zone',$zone);
+ 
+ $this->get_settings($out);
 
 }
+
+function get_settings(&$out)
+{
+	$out["host"] = gg('MiLamp1.Host');
+	$out["updatedTime"] = gg('MiLamp1.updatedTime');
+	$out["level"] = gg('MiLamp1.Level');
+	$out["lamptype"] = gg('MiLamp1.LampType');
+	$out["mode"] = gg('MiLamp1.Mode');
+	$out["zone"] = gg('MiLamp1.Zone');
+}
+
 /**
 * FrontEnd
 *
@@ -172,7 +185,7 @@ function usual(&$out) {
         }
     }
 
-addClassMethod('MiLight', 'disco', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"disco"));','test');
+addClassMethod('MiLight', 'disco', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"disco"));');
 addClassMethod('MiLight', 'discofaster', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"discofaster));');
 addClassMethod('MiLight', 'discoslower', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"discoslower));');
 addClassMethod('MiLight', 'refresh', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$status=$this->getProperty("status");if($status){$this->callMethod("turnOn");}else{$this->callMethod("turnOff");');
@@ -259,7 +272,7 @@ addClassMethod('MiLight', 'setWhite', 'include_once(DIR_MODULES."MiLight/MiLight
 addClassMethod('MiLight', 'turnOff', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",0);$this->callMethod("sendCommand",array("command"=>"off"));');
 addClassMethod('MiLight', 'turnOn', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"on"));');
 
-addClassProperty('MiLight', 'Color', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");','test');
+addClassProperty('MiLight', 'Color', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
 addClassProperty('MiLight', 'Host', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
 addClassProperty('MiLight', 'LampType', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
 addClassProperty('MiLight', 'Level', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
