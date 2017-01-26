@@ -2,9 +2,9 @@
 /**
 * MiLight 
 * @package project
-* @author Wizard <sergejey@gmail.com>
-* @copyright http://majordomo.smartliving.ru/ (c)
-* @version 0.1 (wizard, 10:01:06 [Jan 11, 2017])
+* @author Alex Sokolov <admin@gelezako.com>
+* @copyright Alex Sokolov http://www.xa-xa.pp.ua (c)
+* @version 0.1 (wizard, 13:01:05 [Jan 25, 2017])
 */
 //
 //
@@ -38,13 +38,15 @@ function saveParams($data=0) {
   $p["view_mode"]=$this->view_mode;
  }
  if (IsSet($this->edit_mode)) {
-  $p["edit_mode"]=$this->edit_mode;
+  $p["edit_mode"]=$this->frmEdit;
  }
  if (IsSet($this->tab)) {
   $p["tab"]=$this->tab;
  }
  return parent::saveParams($p);
 }
+
+
 /**
 * getParams
 *
@@ -99,7 +101,6 @@ function run() {
   $out['EDIT_MODE']=$this->edit_mode;
   $out['MODE']=$this->mode;
   $out['ACTION']=$this->action;
-  $out['TAB']=$this->tab;
   $this->data=$out;
   $p=new parser(DIR_TEMPLATES.$this->name."/".$this->name.".html", $this->data, $this);
   $this->result=$p->result;
@@ -112,41 +113,24 @@ function run() {
 * @access public
 */
 function admin(&$out) {
- $this->getConfig();
- $out['API_URL']=$this->config['API_URL'];
- if (!$out['API_URL']) {
-  $out['API_URL']='http://';
- }
- $out['API_KEY']=$this->config['API_KEY'];
- $out['API_USERNAME']=$this->config['API_USERNAME'];
- $out['API_PASSWORD']=$this->config['API_PASSWORD'];
- if ($this->view_mode=='update_settings') {
-   global $api_url;
-   $this->config['API_URL']=$api_url;
-   global $api_key;
-   $this->config['API_KEY']=$api_key;
-   global $api_username;
-   $this->config['API_USERNAME']=$api_username;
-   global $api_password;
-   $this->config['API_PASSWORD']=$api_password;
-   $this->saveConfig();
-   $this->redirect("?");
- }
- if (isset($this->data_source) && !$_GET['data_source'] && !$_POST['data_source']) {
-  $out['SET_DATASOURCE']=1;
- }
- if ($this->data_source=='MiLamp1' || $this->data_source=='') {
-  if ($this->view_mode=='' || $this->view_mode=='search_MiLamp1') {
-   $this->search_MiLamp1($out);
-  }
-  if ($this->view_mode=='edit_MiLamp1') {
-   $this->edit_MiLamp1($out, $this->id);
-  }
-  if ($this->view_mode=='delete_MiLamp1') {
-   $this->delete_MiLamp1($this->id);
-   $this->redirect("?");
-  }
- }
+ global $host;
+ if(isset($host)) sg('MiLamp1.Host',$host);
+ 
+  global $updatedTime;
+ if(isset($updatedTime)) sg('MiLamp1.updatedTime',$updatedTime);
+ 
+  global $level;
+ if(isset($level)) sg('MiLamp1.Level',$level);
+ 
+  global $lamptype;
+ if(isset($lamptype)) sg('MiLamp1.LampType',$lamptype);
+ 
+  global $mode;
+ if(isset($mode)) sg('MiLamp1.Mode',$mode);
+ 
+  global $zone;
+ if(isset($zone)) sg('MiLamp1.Zone',$zone);
+
 }
 /**
 * FrontEnd
@@ -159,55 +143,6 @@ function usual(&$out) {
  $this->admin($out);
 }
 /**
-* MiLamp1 search
-*
-* @access public
-*/
- function search_MiLamp1(&$out) {
-  require(DIR_MODULES.$this->name.'/MiLamp1_search.inc.php');
- }
-/**
-* MiLamp1 edit/add
-*
-* @access public
-*/
- function edit_MiLamp1(&$out, $id) {
-  require(DIR_MODULES.$this->name.'/MiLamp1_edit.inc.php');
- }
-/**
-* MiLamp1 delete record
-*
-* @access public
-*/
- function delete_MiLamp1($id) {
-  $rec=SQLSelectOne("SELECT * FROM MiLamp1 WHERE ID='$id'");
-  // some action for related tables
-  SQLExec("DELETE FROM MiLamp1 WHERE ID='".$rec['ID']."'");
- }
- function propertySetHandle($object, $property, $value) {
-  $this->getConfig();
-   $table='MiLamp1';
-   $properties=SQLSelect("SELECT ID FROM $table WHERE LINKED_OBJECT LIKE '".DBSafe($object)."' AND LINKED_PROPERTY LIKE '".DBSafe($property)."'");
-   $total=count($properties);
-   if ($total) {
-    for($i=0;$i<$total;$i++) {
-     //to-do
-    }
-   }
- }
- function processSubscription($event, $details='') {
- $this->getConfig();
-  if ($event=='SAY') {
-   $level=$details['level'];
-   $message=$details['message'];
-   //...
-  }
- }
- function processCycle() {
- $this->getConfig();
-  //to-do
- }
-/**
 * Install
 *
 * Module installation routine
@@ -215,45 +150,132 @@ function usual(&$out) {
 * @access private
 */
  function install($data='') {
-  subscribeToEvent($this->name, 'SAY');
+ $className = 'MiLight'; //имя класса
+ $objectName = array('MiLamp1');//имя обьектов
+ $objDescription = array('Лампа1'); //даже описание объектов есть
+ $rec = SQLSelectOne("SELECT ID FROM classes WHERE TITLE LIKE '" . DBSafe($className) . "'");
+ 
+    if (!$rec['ID']) {
+        $rec = array();
+        $rec['TITLE'] = $className;
+        $rec['DESCRIPTION'] = 'Модуль для подключения MiLight устройств';
+        $rec['ID'] = SQLInsert('classes', $rec);
+    }
+    for ($i = 0; $i < count($objectName); $i++) {
+        $obj_rec = SQLSelectOne("SELECT ID FROM objects WHERE CLASS_ID='" . $rec['ID'] . "' AND TITLE LIKE '" . DBSafe($objectName[$i]) . "'");
+        if (!$obj_rec['ID']) {
+            $obj_rec = array();
+            $obj_rec['CLASS_ID'] = $rec['ID'];
+            $obj_rec['TITLE'] = $objectName[$i];
+            $obj_rec['DESCRIPTION'] = $objDescription[$i];
+            $obj_rec['ID'] = SQLInsert('objects', $obj_rec);
+        }
+    }
+
+addClassMethod('MiLight', 'disco', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"disco"));','test');
+addClassMethod('MiLight', 'discofaster', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"discofaster));');
+addClassMethod('MiLight', 'discoslower', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"discoslower));');
+addClassMethod('MiLight', 'refresh', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$status=$this->getProperty("status");if($status){$this->callMethod("turnOn");}else{$this->callMethod("turnOff");');
+addClassMethod('MiLight', 'refreshLevel', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$level=$this->getProperty("Level");if($level>0){$this->callMethod("setLevel",array("level"=>$level));}else{$this->callMethod("turnOff");}');
+addClassMethod('MiLight', 'sendCommand', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("updated",time());$this->setProperty("updatedTime",date("H:i"));include_once(ROOT."lib/hardware/milight.php");if (is_array($params)){ $command=$params["command"]; $value=$params["value"];}else{$command=$params;}$host=$this->getProperty("Host");$type=(int)$this->getProperty("LampType");$zone=(int)$this->getProperty("Zone");
+$milight = new Milight($host);$commands="";if ($type==0){$milight->setWhiteActiveGroup($zone);if ($command=="leveldown"){$milight->command("whiteBrightnessDown");}if($command=="levelup"){$milight->command("whiteBrightnessUp");}if($command=="level" && $value>=90){$command="levelmax";}if($command=="level" && $value<=90){$command="levelmin";}if ($command=="levelmax"){$milight->command("whiteGroup".$zone."BrightnessMax");} 
+if ($command=="levelmin") {
+  $milight->command("whiteGroup".$zone."BrightnessMin");}  
+ if ($command=="nightmode") {
+  $milight->command("whiteGroup".$zone."NightMode");}  
+ if ($zone==1) {
+  if ($command=="on") {
+   $milight->whiteGroup1On();}
+  if ($command=="off") {
+   $milight->whiteGroup1Off(); }}
+ if ($zone==2) {
+  if ($command=="on") {
+   $milight->whiteGroup2On();}
+  if ($command=="off") {
+   $milight->whiteGroup2Off(); }} 
+ if ($zone==3) {
+  if ($command=="on") {
+   $milight->whiteGroup3On();}
+  if ($command=="off") {
+   $milight->whiteGroup3Off(); }} 
+ if ($zone==4) {
+  if ($command=="on") {
+   $milight->whiteGroup4On();}
+  if ($command=="off") {
+   $milight->whiteGroup4Off(); }} }
+if ($type==1) {
+ if ($command=="disco") {
+   $milight->setRgbwActiveGroup($zone);  
+   $milight->rgbwSendOnToActiveGroup();
+   $milight->command("rgbwDiscoMode");}
+ if ($command=="discofaster") {
+   $milight->setRgbwActiveGroup($zone);  
+   $milight->rgbwSendOnToActiveGroup();
+   $milight->command("rgbwDiscoFaster");} 
+ if ($command=="discoslower") {
+   $milight->setRgbwActiveGroup($zone);  
+   $milight->rgbwSendOnToActiveGroup();
+   $milight->command("rgbwDiscoSlower");} 
+ if ($command=="level") {
+  $milight->setRgbwActiveGroup($zone);
+  $milight->rgbwBrightnessPercent($value);}
+ if ($command=="color") {
+  $milight->setRgbwActiveGroup($zone);
+  $milight->rgbwSetColorHexString($value);} 
+ if ($zone==1) {
+  if ($command=="on") {
+   $milight->rgbwGroup1On();}
+  if ($command=="off") {
+   $milight->rgbwGroup1Off();
+  }
+  if ($command=="white") {
+   $milight->rgbwGroup1SetToWhite();}}
+ if ($zone==2) {
+  if ($command=="on") {
+   $milight->rgbwGroup2On();}
+  if ($command=="off") {
+   $milight->rgbwGroup2Off();}
+  if ($command=="white") {
+   $milight->rgbwGroup2SetToWhite();}}
+ if ($zone==3){
+  if ($command=="on"){
+   $milight->rgbwGroup3On();}
+  if ($command=="off"){
+   $milight->rgbwGroup3Off();}
+  if ($command=="white"){
+   $milight->rgbwGroup3SetToWhite();}} 
+ if ($zone==4){
+  if ($command=="on"){
+   $milight->rgbwGroup4On(); }
+  if ($command=="off"){
+   $milight->rgbwGroup4Off();}
+  if ($command=="white"){
+   $milight->rgbwGroup4SetToWhite();}}}
+sleep(1);');
+addClassMethod('MiLight', 'setColor', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->setProperty("Mode","C");if ($params["color"]){$this->setProperty("Color",$params["color"]);}else{$params["color"]=$this->getProperty("Color");}$this->callMethod("sendCommand",array("command"=>"color","value"=>$params["color"]));','test');
+addClassMethod('MiLight', 'setLevel', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");if($params["level"]>0){ $this->setProperty("status",1);} else{$this->setProperty("status",0);}$this->setProperty("Level",$params["level"]);$this->callMethod("sendCommand",array("command"=>"level","value"=>$params["level"]));');
+addClassMethod('MiLight', 'setRandomColor', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");/*$colors=array("#ff0000","#00ff00","#0000ff");$color=$colors[rand(0,count($colors)-1)];*/$rand=array("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f");$color="#".$rand[rand(0,15)].$rand[rand(0,15)].$rand[rand(0,15)].$rand[rand(0,15)].$rand[rand(0,15)].$rand[rand(0,15)];$this->callMethod("setColor",array("color"=>$color));');
+addClassMethod('MiLight', 'setWhite', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->setProperty("Mode","W");$this->callMethod("sendCommand",array("command"=>"white"));');
+addClassMethod('MiLight', 'turnOff', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",0);$this->callMethod("sendCommand",array("command"=>"off"));');
+addClassMethod('MiLight', 'turnOn', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");$this->setProperty("status",1);$this->callMethod("sendCommand",array("command"=>"on"));');
+
+addClassProperty('MiLight', 'Color', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");','test');
+addClassProperty('MiLight', 'Host', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'LampType', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'Level', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'LinkedRoom', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'Mode', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'status', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'updated', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'updatedTime', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+addClassProperty('MiLight', 'Zone', 'include_once(DIR_MODULES."MiLight/MiLight.class.php");');
+
   parent::install();
- }
-/**
-* Uninstall
-*
-* Module uninstall routine
-*
-* @access public
-*/
- function uninstall() {
-  SQLExec('DROP TABLE IF EXISTS MiLamp1');
-  parent::uninstall();
- }
-/**
-* dbInstall
-*
-* Database installation routine
-*
-* @access private
-*/
- function dbInstall() {
-/*
-MiLamp1 - 
-*/
-  $data = <<<EOD
- MiLamp1: ID int(10) unsigned NOT NULL auto_increment
- MiLamp1: TITLE varchar(100) NOT NULL DEFAULT ''
- MiLamp1: ZONE varchar(255) NOT NULL DEFAULT ''
- MiLamp1: LINKED_OBJECT varchar(100) NOT NULL DEFAULT ''
- MiLamp1: LINKED_PROPERTY varchar(100) NOT NULL DEFAULT ''
- MiLamp1: LINKED_METHOD varchar(100) NOT NULL DEFAULT ''
-EOD;
-  parent::dbInstall($data);
  }
 // --------------------------------------------------------------------
 }
 /*
 *
-* TW9kdWxlIGNyZWF0ZWQgSmFuIDExLCAyMDE3IHVzaW5nIFNlcmdlIEouIHdpemFyZCAoQWN0aXZlVW5pdCBJbmMgd3d3LmFjdGl2ZXVuaXQuY29tKQ==
+* TW9kdWxlIGNyZWF0ZWQgSmFuIDI1LCAyMDE3IHVzaW5nIFNlcmdlIEouIHdpemFyZCAoQWN0aXZlVW5pdCBJbmMgd3d3LmFjdGl2ZXVuaXQuY29tKQ==
 *
 */
