@@ -6,3 +6,12 @@ Plugin "MiLight" for MajorDomo
 
 Функциональность:
 Плагин автоматически создаёт класс, объект, свойства и методы. В разделе "Устройства" появится вкладка "MiLight", где можно будет выставить основные настройки для лампы MiLight. Интерфейс управления необходимо создать самостоятельно. Детально об этом вы можете посмотреть на канале "Гениально просто" https://www.youtube.com/watch?v=AEoxRd23rDk&t=676s
+
+Купсы валют
+https://github.com/Gelezako/MajorDomo-ExchangeRates
+
+Цены на топливо
+https://github.com/Gelezako/MajorDomo-AZS
+
+Сценарии для проекта Majordomo
+https://github.com/Gelezako/MajorDomo-Scenarios
