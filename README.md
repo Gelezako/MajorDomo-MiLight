@@ -15,3 +15,5 @@ https://github.com/Gelezako/MajorDomo-AZS
 
 Сценарии для проекта Majordomo
 https://github.com/Gelezako/MajorDomo-Scenarios
+
+Видео уроки по настройке плагинов и сценариев: https://www.youtube.com/playlist?list=PLYOYjvcehgZKWUxcNR25o37EdBGtX084E
